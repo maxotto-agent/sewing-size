@@ -37,6 +37,7 @@ for b in d['brands']:
                 bust=rng(bu),hb=rng(s.get('high_bust')),waist=rng(s.get('waist')),hip=rng(s.get('hip'))))
         out.append(dict(brand=b['brand'],range=lab.replace(', second table under Women\'s heading','').replace(', cm','').replace(' (table headed "CM")','').replace(', inches',''),
             url=b['source_url'],checked=b['date_checked'],diff=m.get('diff'),note=m.get('note',''),hb=m.get('hb',False),sizes=sizes))
+out+=json.load(open('extra.json'))
 json.dump(out,open('sizes.json','w'),indent=0)
 html=open('template.html').read().replace('/*DATA*/',json.dumps(out))
 open('index.html','w').write(html)
