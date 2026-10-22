@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sewing pattern size finder: which range and size to cut at each brand</title>
+<meta name="description" content="Enter high bust, full bust, waist and hip once. See which size range to buy and which size to cut at Closet Core, Friday Pattern Co, Style Arc, Simplicity and Cashmerette. Runs in your browser.">
+<style>
+body{font:16px/1.5 system-ui,sans-serif;max-width:60rem;margin:0 auto;padding:1rem;color:#222}
+h1{font-size:1.5rem;margin:.3rem 0}.sub{color:#555;margin:0 0 1rem}
+.inputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(8rem,1fr));gap:.6rem;margin:1rem 0}
+label{display:block;font-size:.85rem;color:#444}input[type=number]{width:100%;box-sizing:border-box;font-size:1.1rem;padding:.4rem}
+.unit button{font-size:1rem;padding:.3rem .8rem;border:1px solid #888;background:#fff}.unit button.on{background:#222;color:#fff}
+.cup{background:#f3f0e8;padding:.6rem .8rem;border-radius:6px;margin:.8rem 0}
+table{border-collapse:collapse;width:100%;font-size:.92rem}th,td{border-bottom:1px solid #ddd;padding:.4rem;text-align:left;vertical-align:top}
+.ok{color:#176b2c;font-weight:600}.n{color:#666;font-size:.85rem}
+.wrap{overflow-x:auto}details{margin:1rem 0}
+footer{margin-top:2.5rem;font-size:.75rem;color:#777}
+</style></head><body>
+<h1>Which size to cut, at every pattern brand</h1>
+<p class="sub">Enter four body measurements once. For each brand you see the size range to buy, the size for each measurement, and where you would grade between sizes. Nothing you type leaves your browser.</p>
+<div class="unit"><button id="in" class="on">inches</button> <button id="cm">cm</button></div>
+<div class="inputs">
+<div><label for="hb">High bust</label><input id="hb" type="number" step="0.25" min="0" inputmode="decimal"></div>
+<div><label for="b">Full bust</label><input id="b" type="number" step="0.25" min="0" inputmode="decimal"></div>
+<div><label for="w">Waist</label><input id="w" type="number" step="0.25" min="0" inputmode="decimal"></div>
+<div><label for="h">Hip</label><input id="h" type="number" step="0.25" min="0" inputmode="decimal"></div>
+</div>
+<p class="n">High bust: around your chest above the bust, under the arms. Full bust: the fullest part. Waist: the narrowest part of your torso. Hip: the fullest part, usually 7–9 in below the waist.</p>
+<div id="cup"></div>
+<div class="wrap"><table id="res"><thead><tr><th>Brand and range</th><th>Bust</th><th>Waist</th><th>Hip</th><th>Grading</th></tr></thead><tbody></tbody></table></div>
+<div id="empty" class="n">Fill in all four measurements to see results.</div>
+<details><summary>How this works, and what it leaves out</summary>
+<ul class="n">
+<li>Sizes come from each brand's published body-measurement chart, re-entered in centimetres (not the garment measurements). Each range shows its source link and the date it was checked.</li>
+<li>Bust: if your full minus high bust difference is larger than the cup the range is drafted for, the bust column is matched using your high bust plus the drafted difference. That is the usual "size by high bust" advice. Ranges with no stated cup (alpha ranges, Plus) use the number named in the row.</li>
+<li>Where a chart gives one number per size, "between 12 and 14" means you are more than 1 cm from both. Where it gives ranges, "gap" means your measurement falls between two sizes' ranges, and "overlap" means it falls in both.</li>
+<li>Charts don't include ease. Your pattern's finished measurements and your own fit preferences still decide. Size charts and brands change; check the source before buying.</li>
+<li>Brands covered so far: Closet Core, Friday Pattern Co, Style Arc, Simplicity (Women's), Cashmerette. Friday's own page shows slightly different tables for XL and up; this tool uses its centimetre table. Simplicity's Misses chart is not included yet.</li>
+</ul></details>
+<footer>This application was autonomously scaffolded and deployed using generative software agents. Designed for lightweight, single-purpose utility. Curated and maintained by @maxim-k.</footer>
+<script>
+const DATA=/*DATA*/;
+const CM=2.54;
+function matchOne(sizes,key,m){
+  const rows=sizes.filter(s=>s[key]);
+  const hit=rows.filter(s=>m>=s[key][0]-0.5&&m<=s[key][1]+0.5);
+  const isPoint=rows.every(s=>s[key][0]===s[key][1]);
+  if(isPoint){
+    let best=null;rows.forEach((s,i)=>{const dd=Math.abs(s[key][0]-m);if(!best||dd<best.d)best={d:dd,i}});
+    if(best.d<=1)return{labels:[rows[best.i].size],idx:best.i};
+    const lo=rows[0][key][0],hi=rows[rows.length-1][key][0];
+    if(m<lo)return{text:'smaller than '+rows[0].size,idx:-1,out:1};
+    if(m>hi)return{text:'larger than '+rows[rows.length-1].size,idx:rows.length,out:1};
+    const j=rows.findIndex(s=>s[key][0]>m);
+    return{text:'between '+rows[j-1].size+' and '+rows[j].size,idx:j-0.5,between:[rows[j-1].size,rows[j].size]};
+  }
+  if(hit.length){const ids=hit.map(s=>rows.indexOf(s));return{labels:hit.map(s=>s.size),idx:ids.reduce((a,b)=>a+b)/ids.length,overlap:hit.length>1}}
+  if(m<rows[0][key][0])return{text:'smaller than '+rows[0].size,idx:-1,out:1};
+  const last=rows[rows.length-1];
+  if(m>last[key][1])return{text:'larger than '+last.size,idx:rows.length,out:1};
+  const j=rows.findIndex(s=>s[key][0]>m);
+  return{text:'gap between '+rows[j-1].size+' and '+rows[j].size,idx:j-0.5,between:[rows[j-1].size,rows[j].size]};
+}
+function label(r){return r.text||(r.labels.length>1?r.labels.join(' or ')+' (overlap)':r.labels[0])}
+function compute(rg,m){ // m in cm: {hb,b,w,h}
+  const diff=m.b-m.hb;let useHB=false,bustM=m.b,why='full bust';
+  if(rg.hb){useHB=true}
+  else if(rg.diff!=null&&diff>rg.diff+0.01){useHB=true}
+  let bust;
+  if(useHB){
+    if(rg.sizes.some(s=>s.hb)){bust=matchOne(rg.sizes,'hb',m.hb);why='high bust'}
+    else{bust=matchOne(rg.sizes,'bust',m.hb+rg.diff);why='high bust + '+(rg.diff/CM).toFixed(0)+' in'}
+  } else bust=matchOne(rg.sizes,'bust',m.b);
+  const waist=matchOne(rg.sizes,'waist',m.w),hip=matchOne(rg.sizes,'hip',m.h);
+  const out=[bust,waist,hip];
+  let grade;
+  if(out.some(o=>o.out))grade='Outside this range';
+  else{const ix=out.map(o=>o.idx);const spread=Math.max(...ix)-Math.min(...ix);
+    grade=spread<=0.75?'One size, no grading':spread<=1.75?'Grade between neighbouring sizes':'Grade across '+Math.round(spread)+' sizes';}
+  return{bust,waist,hip,why,grade,out:out.some(o=>o.out),spread:Math.max(...out.map(o=>o.idx))-Math.min(...out.map(o=>o.idx))};
+}
+if(typeof document!=='undefined'){
+let unit='in';
+const $=id=>document.getElementById(id);
+function read(){const v=['hb','b','w','h'].map(i=>parseFloat($(i).dataset.cm));return v.some(isNaN)||v.some(x=>x<=0)?null:{hb:v[0],b:v[1],w:v[2],h:v[3]}}
+function fmt(cm){return unit==='in'?(cm/CM).toFixed(1)+' in':Math.round(cm)+' cm'}
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+function render(){
+  const m=read();const tb=document.querySelector('#res tbody');tb.innerHTML='';
+  $('res').style.display=$('empty').style.display=m?'none':'';$('res').style.display=m?'':'none';$('empty').style.display=m?'none':'';
+  $('cup').innerHTML='';
+  if(!m)return;
+  if(m.b<m.hb){$('cup').innerHTML='<div class="cup">Your full bust is smaller than your high bust. Check the measurements.</div>';$('res').style.display='none';return}
+  const diff=m.b-m.hb;const cup=Math.round(diff/CM);
+  $('cup').innerHTML='<div class="cup">Full bust minus high bust: <b>'+fmt(diff)+'</b>'+(cup>=1?' (about '+['A','B','C','D','DD/E','F','G','H'][Math.min(cup-1,7)]+' cup by the common 1 in = 1 cup rule)':' (under a cup size)')+'</div>';
+  let prev='';
+  DATA.forEach(rg=>{
+    const r=compute(rg,m);
+    const tr=document.createElement('tr');
+    const brand=rg.brand!==prev?'<b>'+esc(rg.brand)+'</b><br>':'';prev=rg.brand;
+    const cell=o=>esc(label(o));
+    tr.innerHTML='<td>'+brand+esc(rg.range)+'<div class="n">'+esc(rg.note)+' · <a href="'+rg.url+'" rel="noopener">chart</a>, checked '+rg.checked+'</div></td><td>'+cell(r.bust)+'<div class="n">by '+r.why+'</div></td><td>'+cell(r.waist)+'</td><td>'+cell(r.hip)+'</td><td'+(r.grade.startsWith('One')?' class="ok"':'')+'>'+r.grade+'</td>';
+    tb.appendChild(tr);
+  });
+}
+['hb','b','w','h'].forEach(i=>$(i).addEventListener('input',()=>{const x=parseFloat($(i).value);$(i).dataset.cm=isNaN(x)?'':x*(unit==='in'?CM:1);render()}));
+['in','cm'].forEach(u=>$(u).addEventListener('click',()=>{
+  const old=unit;if(old===u)return;const f=u==='cm'?CM:1/CM;
+  ['hb','b','w','h'].forEach(i=>{const v=parseFloat($(i).value);if(!isNaN(v))$(i).value=+(v*f).toFixed(u==='cm'?1:2)});
+  unit=u;$('in').classList.toggle('on',u==='in');$('cm').classList.toggle('on',u==='cm');render()}));
+render();
+} else module.exports={compute,matchOne,DATA};
+</script></body></html>
