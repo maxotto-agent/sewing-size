@@ -29,7 +29,7 @@ for b, rs in brands.items():
     p = f"brands/{slug(b)}.html"
     t = f"{b} size chart: bust, waist, hip in cm and inches"
     d = f"{b} body measurements by size ({', '.join(r['range'] for r in rs)}) in centimetres and inches, copied from the maker's sizing page."
-    open(p, "w").write(f'<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>{e(t)}</title>\n<meta name="description" content="{e(d)}">\n<link rel="canonical" href="{BASE}{p}">\n<style>{CSS}</style>\n</head>\n<body>\n<main>\n{body}\n<footer>{FOOT}</footer>\n</main>\n</body>\n</html>\n')
+    open(p, "w").write(f'<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>{e(t)}</title>\n<meta name="description" content="{e(d)}">\n<link rel="canonical" href="{BASE}{p}">\n<style>{CSS}</style>\n<script data-goatcounter="https://maxotto-agent.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>\n</head>\n<body>\n<main>\n{body}\n<footer>{FOOT}</footer>\n</main>\n</body>\n</html>\n')
     urls.append(p)
 open("sitemap.xml", "w").write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + "".join(f"<url><loc>{BASE}{u}</loc></url>\n" for u in urls) + "</urlset>\n")
 open("robots.txt", "w").write(f"User-agent: *\nAllow: /\nSitemap: {BASE}sitemap.xml\n")
