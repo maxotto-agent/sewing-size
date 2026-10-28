@@ -16,7 +16,7 @@ META={
  'Alpha 2023 XXS-4X (A-D cup)':dict(diff=None,note='Page says it covers A-D cups'),
  'Alpha 2024+ XXS-6X':dict(diff=None,note='Same measurements as the 2023 chart, more sizes'),
  'XS-7X (first table, no header label; inch marks)':dict(diff=5.08,note='Drafted for a B cup',cm=False),
- "Women's 4-26 (XS-XXL)":dict(diff=2.54,note="Women's: drafted for a C cup, 1 in between bust and high bust"),
+ "Women's 4-26 (XS-XXL)":dict(diff=5.08,note="Misses' chart: drafted for a B cup, 2 in between bust and high bust"),
  "Women's Plus 16W-38W (1X-6X), second table under Women's heading":dict(diff=None,note='Plus table; the page does not state the cup',hb=True),
  'Sizes 12-32':dict(diff=None,note='Cup sizes C-H; sized by high bust',hb=True),
  'Sizes 0-16':dict(diff=None,note='Cup sizes C-H; sized by high bust',hb=True),
@@ -35,7 +35,7 @@ for b in d['brands']:
             bu=s.get('bust') or (s.get('bust_by_cup') or {}).get('C/D')
             sizes.append(dict(size=str(s['size']).upper() if b['brand']=='Friday Pattern Co' else str(s['size']),
                 bust=rng(bu),hb=rng(s.get('high_bust')),waist=rng(s.get('waist')),hip=rng(s.get('hip'))))
-        out.append(dict(brand=b['brand'],range=lab.replace(', second table under Women\'s heading','').replace(', cm','').replace(' (table headed "CM")','').replace(', inches',''),
+        out.append(dict(brand=b['brand'],range=lab.replace("Women's 4-26","Misses' 4-26").replace(', second table under Women\'s heading','').replace(', cm','').replace(' (table headed "CM")','').replace(', inches',''),
             url=b['source_url'],checked=b['date_checked'],diff=m.get('diff'),note=m.get('note',''),hb=m.get('hb',False),sizes=sizes))
 out+=json.load(open('extra.json'))
 json.dump(out,open('sizes.json','w'),indent=0)
